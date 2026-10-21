@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HiQuote · 견적서 생성기</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="dot"></span>HiQuote <small>롯데하이마트 정왕역점 BY 4240335</small></div>
+  <div class="actions">
+    <button id="btnNew" class="ghost">새 견적</button>
+    <button id="btnDup" class="ghost">복제</button>
+    <button id="btnList" class="ghost">저장 목록</button>
+    <span class="sep"></span>
+    <button id="btnSave">견적 저장</button>
+    <button id="btnPdf">PDF 생성</button>
+    <button id="btnMail">이메일 보내기</button>
+    <button id="btnXlsx" class="ghost">엑셀</button>
+    <button id="btnPrint" class="ghost">인쇄</button>
+    <button id="btnSettings" class="ghost icon" title="설정">⚙</button>
+  </div>
+</header>
+
+<main class="workspace">
+  <!-- ============ 입력 패널 ============ -->
+  <section class="panel">
+    <div class="status"><span id="stNo">-</span><span id="stState" class="badge">미저장</span><span id="stMode" class="badge soft"></span></div>
+
+    <h3>견적 정보</h3>
+    <div class="grid2">
+      <label>견적일자<input type="date" id="fDate"></label>
+      <label>유효기간 <span class="hint" id="fValidHint">견적일 D+30 자동</span><input type="date" id="fValid"></label>
+    </div>
+    <label class="check"><input type="checkbox" id="fVatIncl" checked> 할인단가가 VAT 포함가 (공급가액 = 금액 ÷ 1.1)</label>
+
+    <h3>수신처</h3>
+    <label>수신(고객명)<input id="fClient" placeholder="예) 경기과학기술대학교"></label>
+    <div class="grid2">
+      <label>TEL<input id="fTel"></label>
+      <label>FAX<input id="fFax"></label>
+    </div>
+    <label>E-MAIL<input id="fEmail" type="email"></label>
+
+    <h3>전문상담원</h3>
+    <label>이름/직책<input id="fCName"></label>
+    <div class="grid2">
+      <label>매장 TEL<input id="fCTel"></label>
+      <label>휴대폰<input id="fCCell"></label>
+    </div>
+
+    <h3 class="row">품목 <span class="hint">1품목: 이미지+상세스펙 / 2품목 이상: 품목당 1줄 스펙</span></h3>
+    <div id="items"></div>
+    <button id="btnAddItem" class="add">+ 품목 추가</button>
+  </section>
+
+  <!-- ============ A4 미리보기 ============ -->
+  <section class="previewWrap" id="previewWrap">
+    <div class="zoom" id="zoom">
+      <div class="page" id="page">
+        <div class="frame">
+          <div class="head">
+            <div class="no">NO.&nbsp;&nbsp;<span id="pNo"></span></div>
+            <div class="title">견&nbsp;&nbsp;&nbsp;&nbsp;적&nbsp;&nbsp;&nbsp;&nbsp;서</div>
+            <img class="stamp" id="pStamp" src="assets/stamp.png" alt="직인">
+            <div class="cols">
+              <div class="left">
+                <div class="date" id="pDate"></div>
+                <div class="to"><span>수신:</span><b id="pClient"></b></div>
+                <table class="contact">
+                  <tr><th rowspan="3">고객님<br>연락처</th><td class="k">TEL</td><td id="pTel"></td></tr>
+                  <tr><td class="k">FAX</td><td id="pFax"></td></tr>
+                  <tr><td class="k">E-MAIL</td><td id="pEmail"></td></tr>
+                </table>
+                <div class="lead">아래와 같이 견적합니다</div>
+              </div>
+              <div class="right">
+                <table class="supplier">
+                  <colgroup><col style="width:9%"><col style="width:21%"><col style="width:42%"><col></colgroup>
+                  <tr><th rowspan="4" class="v">공<br>급<br>자</th><th class="two">사업자<br>고유번호</th><td colspan="2" class="c" id="bNo"></td></tr>
+                  <tr><th>상&nbsp;&nbsp;&nbsp;&nbsp;호</th><td id="bName"></td><td class="c sp" id="bCeo"></td></tr>
+                  <tr><th class="two">사업자<br>주&nbsp;&nbsp;&nbsp;&nbsp;소</th><td colspan="2" class="c" id="bAddr"></td></tr>
+                  <tr><th>업&nbsp;&nbsp;&nbsp;&nbsp;태</th><td class="c" id="bType"></td><td class="c" id="bItem"></td></tr>
+                </table>
+              </div>
+              <table class="consult">
+                <tr><th>전문상담원</th><td colspan="2" id="pCName" class="cname"></td></tr>
+                <tr><td class="k">TEL</td><td id="pCTel" class="ctel"></td><td id="pCCell"></td></tr>
+              </table>
+              <div class="totalbox"><div class="tl">총액(VAT포함)</div><div class="tv">₩&nbsp;&nbsp;<span id="pTotal"></span></div></div>
+            </div>
+          </div>
+
+          <table class="items" id="pItems">
+            <colgroup>
+              <col style="width:6.5%"><col style="width:14%"><col style="width:4.5%"><col style="width:10%"><col style="width:10%">
+              <col style="width:10.5%"><col style="width:10.5%"><col style="width:9.5%"><col style="width:11%"><col style="width:13.5%">
+            </colgroup>
+            <thead><tr>
+              <th>품목</th><th>모델명</th><th>수량</th><th class="sm">판매기준가(개당)</th><th class="sm">대량 할인단가</th>
+              <th>공급 단가</th><th>공급가액</th><th>세액</th><th>합계금액</th><th>비고</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+
+          <div class="spec" id="pSpec">
+            <div class="specTitle" id="pSpecTitle"></div>
+            <div class="specBody" id="pSpecBody"></div>
+          </div>
+
+          <div class="foot">
+            <div class="card"><img src="assets/business_card.png" alt="명함"></div>
+            <div class="sum">
+              <table class="sumrow"><tr><th>합계</th><td id="sF"></td><td id="sG"></td><td id="sH"></td><td id="sI"></td></tr></table>
+              <div class="valid">해당 견적의 유효기간은 <em id="pValid"></em>까지 입니다.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ============ 모달 ============ -->
+<dialog id="dlgList" class="dlg wide">
+  <div class="dlgHead"><b>저장된 견적</b><input id="listSearch" placeholder="번호·고객명·모델 검색">
+    <button class="ghost" id="btnBackup" title="모든 견적을 파일로 저장">백업 내보내기</button>
+    <button class="ghost" id="btnRestore" title="백업 파일에서 견적 복원">백업 가져오기</button><input type="file" id="restoreFile" accept=".json,application/json" hidden>
+    <button class="ghost close">닫기</button></div>
+  <div class="tableScroll"><table class="list"><thead><tr><th>견적번호</th><th>일자</th><th>수신</th><th>모델</th><th class="r">총액</th><th></th></tr></thead><tbody id="listBody"></tbody></table></div>
+</dialog>
+
+<dialog id="dlgMail" class="dlg">
+  <div class="dlgHead"><b>이메일 보내기</b><button class="ghost close">닫기</button></div>
+  <label>받는 사람<input id="mTo" placeholder="쉼표로 여러 명"></label>
+  <label>참조(CC)<input id="mCc"></label>
+  <label>제목<input id="mSubject"></label>
+  <label>내용<textarea id="mBody" rows="11"></textarea></label>
+  <div class="hint" id="mAttach"></div>
+  <div class="dlgFoot"><button id="mSend">PDF 첨부하여 발송</button></div>
+</dialog>
+
+<dialog id="dlgSettings" class="dlg">
+  <div class="dlgHead"><b>설정</b><button class="ghost close">닫기</button></div>
+  <div id="setSmtp">
+  <h4>메일 발송 (SMTP)</h4>
+  <div class="grid2">
+    <label>SMTP 서버<input id="sHost"></label>
+    <label>포트<input id="sPort" type="number"></label>
+  </div>
+  <label>계정(보내는 주소)<input id="sUser" placeholder="example@gmail.com"></label>
+  <label>앱 비밀번호<input id="sPass" type="password" placeholder="변경 시에만 입력"></label>
+  <label>보내는 사람 이름<input id="sFrom"></label>
+  <p class="hint">Gmail: Google 계정 → 보안 → 2단계 인증 → <b>앱 비밀번호</b> 생성 후 입력. 비밀번호는 이 PC의 data/settings.json 에만 저장됩니다.</p>
+  </div>
+  <h4>공급자 정보 (견적서 우측 상단)</h4>
+  <div class="grid2">
+    <label>사업자 고유번호<input id="sBizNo"></label>
+    <label>대표자<input id="sBizCeo"></label>
+    <label>상호<input id="sBizName"></label>
+    <label>업태<input id="sBizType"></label>
+    <label>주소<input id="sBizAddr"></label>
+    <label>종목<input id="sBizItem"></label>
+  </div>
+  <label>직인 이미지 교체 <span class="hint">배경이 투명한 PNG 권장 · 고해상도 스캔본을 올리면 선명해집니다</span>
+    <span class="stampRow"><img id="sStampPrev" src="assets/stamp.png" alt=""><input type="file" id="sStamp" accept="image/png"></span></label>
+  <div id="setNaver">
+  <h4>제품 이미지 자동 검색</h4>
+  <p class="hint">모델명을 입력하면 웹(네이버 쇼핑)에서 제품 이미지를 찾아 자동으로 넣습니다. 키 없이 동작하며, 네이버 검색 API 키를 넣으면 더 안정적입니다(선택).</p>
+  <div class="grid2">
+    <label>네이버 Client ID<input id="sNvId"></label>
+    <label>네이버 Client Secret<input id="sNvSecret" type="password" placeholder="변경 시에만 입력"></label>
+  </div>
+  </div>
+  <h4>기본값</h4>
+  <div class="grid2">
+    <label>상담원 이름<input id="sCName"></label>
+    <label>유효기간(일)<input id="sDays" type="number"></label>
+    <label>매장 TEL<input id="sCTel"></label>
+    <label>휴대폰<input id="sCCell"></label>
+  </div>
+  <label>메일 제목 양식<input id="sSubj"></label>
+  <label>메일 본문 양식 <span class="hint">{client} {no} {total} {valid}</span><textarea id="sBody" rows="8"></textarea></label>
+  <div class="dlgFoot"><button id="sSave">설정 저장</button></div>
+</dialog>
+
+<div id="toast"></div>
+
+<script src="vendor/html2canvas.min.js"></script>
+<script src="vendor/jspdf.umd.min.js"></script>
+<script src="vendor/exceljs.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
